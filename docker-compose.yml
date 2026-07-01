@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/metadata_db
+      - REDIS_URL=redis://redis:6379
+      - STRIP_GPS_DATA=true
+      - STRIP_TIMESTAMPS=false
+      - ANONYMIZE_DEVICE_ID=true
+    volumes:
+      - ./uploads:/tmp/uploads
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=metadata_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Optional: Add a worker for background processing
+  worker:
+    build: .
+    command: python -m services.worker
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/metadata_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
