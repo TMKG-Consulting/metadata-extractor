@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.9.25-slim-bookworm
 
 # Set working directory
 WORKDIR /app
@@ -7,13 +7,9 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Install system dependencies for OpenCV
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+# Install system dependencies for OpenCV (headless needs only glib)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
